@@ -1,0 +1,9 @@
+{
+  "name": "secret-number-duel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local and online two-player secret number game with in-memory rooms",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

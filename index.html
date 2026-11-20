@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">    
+    <title>Secret Number Duel</title>
+    <script src="index.js" defer></script>
+</head>
+<body>
+    <section id="modeScreen" class="mode-screen">
+        <div class="mode-card">
+            <div class="eyebrow">Choose how to play</div>
+            <h1>Secret <span>Number</span></h1>
+            <p class="subtitle">Challenge someone beside you or invite a friend online.</p>
+            <div id="modeChoices" class="mode-choices">
+                <button id="playLocal" class="mode-button local-mode">Play Locally <span>↗</span><small>Take turns on this device</small></button>
+                <button id="playOnline" class="mode-button online-mode">Play Online <span>↗</span><small>Create a room or join a friend</small></button>
+            </div>
+            <div id="onlineSetup" class="online-setup" hidden>
+                <label class="online-digit-setting" for="onlineDigitCount">Choose digits for this room
+                    <select id="onlineDigitCount">
+                        <option value="3">3 digits</option><option value="4" selected>4 digits</option>
+                        <option value="5">5 digits</option><option value="6">6 digits</option>
+                        <option value="7">7 digits</option><option value="8">8 digits</option>
+                        <option value="9">9 digits</option><option value="10">10 digits</option>
+                    </select>
+                </label>
+                <button id="createRoom" class="mode-button online-mode">Create a Room <span>＋</span><small>Get a code to share with your friend</small></button>
+                <div class="join-room">
+                    <label for="roomCodeInput">Have a room code?</label>
+                    <div><input id="roomCodeInput" type="text" maxlength="6" autocomplete="off" placeholder="Enter 6-character code"><button id="joinRoom">Join</button></div>
+                </div>
+                <p id="onlineError" class="online-error" role="alert"></p>
+                <button id="backToModes" class="text-button">← Back</button>
+            </div>
+        </div>
+    </section>
+
+    <main id="gameApp" class="page-shell" hidden>
+        <header class="hero">
+            <div class="eyebrow">A head-to-head number duel</div>
+            <h1>Secret <span>Number</span></h1>
+            <p class="subtitle">Pick a number. Keep it hidden. Take turns to crack your opponent's code.</p>
+        </header>
+
+        <section class="game-controls" aria-live="polite">
+            <label class="digit-setting" for="digitCount">Digits per number
+                <select id="digitCount">
+                    <option value="3">3 digits</option>
+                    <option value="4" selected>4 digits</option>
+                    <option value="5">5 digits</option>
+                    <option value="6">6 digits</option>
+                    <option value="7">7 digits</option>
+                    <option value="8">8 digits</option>
+                    <option value="9">9 digits</option>
+                    <option value="10">10 digits</option>
+                </select>
+            </label>
+            <button id="startGame" disabled>Start Game <span aria-hidden="true">→</span></button>
+            <p id="gameStatus">Both players must save a number to begin.</p>
+            <div id="roomInfo" class="room-info" hidden><span>ROOM</span><strong id="roomCodeLabel"></strong><button id="copyRoomCode" aria-label="Copy room code">Copy</button></div>
+            <button id="leaveGame" class="text-button leave-button" hidden>Leave room</button>
+        </section>
+
+        <section id="bigbox" aria-label="Player game panels">
+            <article id="div1" class="box">
+                <header class="player-heading">
+                    <div class="player-title"><span class="player-mark">01</span><h2>Player One</h2></div>
+                    <span class="player-tag">Sunshine side</span>
+                </header>
+                <p class="step-label">01 / Set your secret</p>
+                <div class="secret-row">
+                    <input type="password" id="num1" inputmode="numeric" autocomplete="off" aria-label="Player One secret number" placeholder="Choose a number">
+                    <button id="save1">Lock it in</button>
+                </div>
+                <p class="step-label">02 / Make your guess</p>
+                <div class="guess-row">
+                    <input type="text" id="guess1" inputmode="numeric" autocomplete="off" aria-label="Player One guess" placeholder="Enter a guess">
+                    <button id="btn1" onclick="checkGuess(1)" disabled>Guess <span aria-hidden="true">↗</span></button>
+                </div>
+                <div class="guess-list-wrap">
+                    <p class="guess-list-label">Your wrong guesses</p>
+                    <table class="guess-table" id="guesses1" aria-label="Player One incorrect guesses">
+                        <thead><tr><th>Guessed</th><th>Digits matched</th><th>Places matched</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article id="div2" class="box">
+                <header class="player-heading">
+                    <div class="player-title"><span class="player-mark">02</span><h2>Player Two</h2></div>
+                    <span class="player-tag">Garden side</span>
+                </header>
+                <p class="step-label">01 / Set your secret</p>
+                <div class="secret-row">
+                    <input type="password" id="num2" inputmode="numeric" autocomplete="off" aria-label="Player Two secret number" placeholder="Choose a number">
+                    <button id="save2">Lock it in</button>
+                </div>
+                <p class="step-label">02 / Make your guess</p>
+                <div class="guess-row">
+                    <input type="text" id="guess2" inputmode="numeric" autocomplete="off" aria-label="Player Two guess" placeholder="Enter a guess">
+                    <button id="btn2" onclick="checkGuess(2)" disabled>Guess <span aria-hidden="true">↗</span></button>
+                </div>
+                <div class="guess-list-wrap">
+                    <p class="guess-list-label">Your wrong guesses</p>
+                    <table class="guess-table" id="guesses2" aria-label="Player Two incorrect guesses">
+                        <thead><tr><th>Guessed</th><th>Digits matched</th><th>Places matched</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <section id="winnerOverlay" class="winner-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="winnerTitle" hidden>
+        <div id="confetti" class="confetti" aria-hidden="true"></div>
+        <div class="winner-content">
+            <div class="winner-card">
+                <div class="trophy" aria-hidden="true">🏆</div>
+                <p class="winner-kicker">Brilliant guess!</p>
+                <h2 id="winnerTitle">Player 1 wins!</h2>
+                <p class="winner-message">The secret code has been cracked.</p>
+                <div class="winner-sparkles" aria-hidden="true">✦　✧　✦</div>
+            </div>
+            <button id="newGame" class="new-game-button">Play Again <span aria-hidden="true">↻</span></button>
+        </div>
+    </section>
+</body>
+</html>
