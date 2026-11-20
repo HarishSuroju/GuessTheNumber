@@ -48,6 +48,7 @@ let gameOver = false;
 let currentPlayer = 1;
 let gameMode = null;
 let onlineSession = null;
+let onlinePlayerNumber = null;
 let eventSource = null;
 
 function saveNumber(player) {
@@ -116,7 +117,21 @@ function checkGuess(player) {
 }
 
 function showWinner(player) {
-    winnerTitle.textContent = `Player ${player} wins!`;
+    const winnerMessage = document.querySelector(".winner-message");
+    const winnerKicker = document.querySelector(".winner-kicker");
+    const trophy = document.querySelector(".trophy");
+    if (gameMode === "online") {
+        const didWin = player === onlinePlayerNumber;
+        winnerTitle.textContent = didWin ? "You won!" : "You lost!";
+        winnerMessage.textContent = didWin ? "You cracked your opponent's secret code." : "Your opponent cracked your secret code.";
+        winnerKicker.textContent = didWin ? "Brilliant guess!" : "Game over";
+        trophy.textContent = didWin ? "🏆" : "💔";
+    } else {
+        winnerTitle.textContent = `Player ${player} wins!`;
+        winnerMessage.textContent = "The secret code has been cracked.";
+        winnerKicker.textContent = "Brilliant guess!";
+        trophy.textContent = "🏆";
+    }
     newGameButton.innerHTML = gameMode === "online" ? 'Back to start <span aria-hidden="true">↻</span>' : 'Play Again <span aria-hidden="true">↻</span>';
     winnerOverlay.hidden = false;
     winnerOverlay.classList.add("is-visible");
@@ -260,6 +275,7 @@ async function joinOnlineRoom() {
 function enterOnlineGame(session) {
     gameMode = "online";
     onlineSession = { code: session.code, token: session.token, player: session.player };
+    onlinePlayerNumber = session.player;
     sessionStorage.setItem("numberGameSession", JSON.stringify(onlineSession));
     modeScreen.hidden = true;
     gameApp.hidden = false;
@@ -304,8 +320,11 @@ function renderOnlineState(state) {
     const player = onlineSession.player;
 
     for (const id of [1, 2]) {
-        const saved = state.secretsSaved[id];
         const isThisPlayer = id === player;
+        const saved = state.secretsSaved[id];
+        playerPanels[id].querySelector(".player-name").textContent = isThisPlayer ? "You" : "Opponent";
+        playerPanels[id].querySelector(".player-tag").textContent = isThisPlayer ? "Your side" : "Opponent";
+        playerPanels[id].querySelector(".guess-list-label").textContent = isThisPlayer ? "Your wrong guesses" : "Opponent's wrong guesses";
         secretInputs[id].parentElement.hidden = !isThisPlayer;
         secretInputs[id].parentElement.previousElementSibling.hidden = !isThisPlayer;
         secretInputs[id].disabled = saved;
@@ -330,12 +349,12 @@ function renderOnlineState(state) {
     startButton.hidden = state.status === "playing";
     startButton.disabled = !state.secretsSaved[1] || !state.secretsSaved[2];
     gameStatus.textContent = state.status === "playing"
-        ? `Player ${state.currentPlayer}'s turn${state.currentPlayer === player ? " — your turn" : " — waiting for your opponent"}.`
+        ? state.currentPlayer === player ? "Your turn — enter a guess." : "Opponent's turn — waiting for their guess."
         : state.secretsSaved[1] && state.secretsSaved[2]
             ? "Both secrets are locked. Either player can start."
-            : state.secretsSaved[1] || state.secretsSaved[2]
-                ? `Waiting for Player ${state.secretsSaved[1] ? 2 : 1} to lock a number.`
-                : "Both players must lock a number. Share the room code to invite your opponent.";
+            : state.secretsSaved[player]
+                ? "Your secret is locked. Waiting for your opponent."
+                : "Lock your secret number to continue. Share the room code to invite your opponent.";
 }
 
 async function saveOnlineNumber(player) {
@@ -389,7 +408,7 @@ async function checkOnlineGuess(player) {
 function finishOnlineGame(winner) {
     if (gameOver) return;
     gameOver = true;
-    gameStatus.textContent = `Player ${winner} guessed correctly and wins!`;
+    gameStatus.textContent = winner === onlinePlayerNumber ? "You guessed correctly and won!" : "Your opponent guessed correctly. You lost.";
     submitButtons[1].disabled = true;
     submitButtons[2].disabled = true;
     guessInputs[1].value = "";
@@ -416,6 +435,7 @@ function returnToModeScreen() {
     if (eventSource) eventSource.close();
     eventSource = null;
     onlineSession = null;
+    onlinePlayerNumber = null;
     sessionStorage.removeItem("numberGameSession");
     gameMode = null;
     gameStarted = false;
